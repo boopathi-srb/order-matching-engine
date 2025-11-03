@@ -33,16 +33,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) registerRoutes() {
-    s.mux.HandleFunc("/orders", s.handleOrders)
-    s.mux.HandleFunc("/orders/", s.handleOrderByID)
-    s.mux.HandleFunc("/orderbook", s.handleOrderBook)
     // API v1 aliases
     s.mux.HandleFunc("/api/v1/orders", s.handleOrders)
     s.mux.HandleFunc("/api/v1/orders/", s.handleOrderByID)
     s.mux.HandleFunc("/api/v1/orderbook", s.handleOrderBook)
     s.mux.HandleFunc("/api/v1/orderbook/", s.handleOrderBookPath)
     // simple health check
-    s.mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+    s.mux.HandleFunc("/api/v1/health", func(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusOK)
         _ = json.NewEncoder(w).Encode(map[string]interface{}{"status": "healthy"})
