@@ -130,15 +130,10 @@ wrk -t10 -c100 -d10s -s scripts/order.lua http://localhost:8080/api/v1/orders
 **Mandatory Requirements:** **PASSED**
 
 | Metric | Requirement | Result | Status |
-
-| :--- | :--- | :--- | :--- |
-
-| **Throughput** | $\ge$ 30,000 ops/sec | **92,435** ops/sec | **✅ PASS** |
-
-| **p50 Latency** | $\le$ 10 ms | **3.47** ms | **✅ PASS** |
-
-| **p99 Latency** | $\le$ 50 ms | **28.93** ms | **✅ PASS** |
-
-| **p999 Latency**| $\le$ 100 ms | **Unmeasured** | *(See Note)* |
+| :-- | :-- | :-- | :-- |
+| Throughput | ≥ 30,000 ops/sec | 92,435 ops/sec | ✅ PASS |
+| p50 Latency | ≤ 10 ms | 3.47 ms | ✅ PASS |
+| p99 Latency | ≤ 50 ms | 28.93 ms | ✅ PASS |
+| p999 Latency | ≤ 100 ms | Unmeasured | (See Note) |
 
 **Note on p999:** The `wrk` benchmarking tool does not report p999 latency. The `p99` latency of **28.93ms** is excellent and passes its 50ms requirement. The `max` latency observed was `145.86ms`. This indicates that while the p999 value is *likely* low, it cannot be confirmed without a different test harness. The server passes all other performance targets.
