@@ -1,0 +1,47 @@
+# Binaries
+matching-engine
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Output & coverage
+*.out
+coverage.*
+*.coverprofile
+*.cov
+*.lcov
+
+# Logs
+*.log
+
+# Build directories
+/bin/
+/build/
+/dist/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+.DS_Store
+
+# Env / config
+.env
+.env.*
+*.local
+
+# Tooling
+.cursor/
+.fleet/
+
+# Go workspace files
+go.work
+go.work.sum
+
+
