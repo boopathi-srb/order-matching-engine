@@ -36,8 +36,8 @@ func (s *Server) registerRoutes() {
     // API v1 aliases
     s.mux.HandleFunc("/api/v1/orders", s.handleOrders)
     s.mux.HandleFunc("/api/v1/orders/", s.handleOrderByID)
-    s.mux.HandleFunc("/api/v1/orderbook", s.handleOrderBook)
-    s.mux.HandleFunc("/api/v1/orderbook/", s.handleOrderBookPath)
+    s.mux.HandleFunc("/api/v1/orderbook", s.handleOrderBookGeneral)
+    s.mux.HandleFunc("/api/v1/orderbook/", s.handleOrderBookGeneral)
     // simple health check
     s.mux.HandleFunc("/api/v1/health", func(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", "application/json")
@@ -53,13 +53,6 @@ type createOrderRequest struct {
     Type     string `json:"type"`
     Price    int64  `json:"price"`
     Quantity int64  `json:"quantity"`
-}
-
-type createOrderResponse struct {
-    Order  *engine.Order          `json:"order"`
-    Trades []engine.Trade         `json:"trades"`
-    InBook bool                   `json:"order_in_book"`
-    Market bool                   `json:"is_market_order"`
 }
 
 func (s *Server) handleOrders(w http.ResponseWriter, r *http.Request) {
@@ -101,22 +94,15 @@ func (s *Server) createOrder(w http.ResponseWriter, r *http.Request) {
         s.writeErrorPlain(w, http.StatusBadRequest, "Invalid order: price must be > 0 for limit orders")
         return
     }
-
-    id := req.ID
-    if id == "" {
-        id = uuid.New().String()
-    }
-
+    // Always generate a new ID server side
+    id := uuid.New().String()
     order := engine.NewOrder(id, req.Symbol, side, otype, req.Price, req.Quantity)
     resp, err := s.eng.SubmitOrder(order)
     if err != nil {
-        // per spec return plain error string
         s.writeErrorPlain(w, http.StatusBadRequest, err.Error())
         return
     }
-
     w.Header().Set("Content-Type", "application/json")
-    // Shape per spec depending on status
     switch order.Status {
     case engine.StatusAccepted:
         w.WriteHeader(http.StatusCreated)
@@ -146,7 +132,6 @@ func (s *Server) createOrder(w http.ResponseWriter, r *http.Request) {
         })
         return
     default:
-        // Fallback to 201 for any other accept state
         w.WriteHeader(http.StatusCreated)
         _ = json.NewEncoder(w).Encode(map[string]interface{}{
             "order_id": order.ID,
@@ -158,8 +143,9 @@ func (s *Server) createOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleOrderByID(w http.ResponseWriter, r *http.Request) {
-    id := strings.TrimPrefix(r.URL.Path, "/orders/")
-    if id == "" {
+    base := "/api/v1/orders/"
+    id := strings.TrimPrefix(r.URL.Path, base)
+    if id == "" || id == r.URL.Path {
         s.writeErrorPlain(w, http.StatusBadRequest, "Invalid order: order id required")
         return
     }
@@ -222,50 +208,26 @@ func (s *Server) cancelOrder(w http.ResponseWriter, _ *http.Request, id string) 
     })
 }
 
-func (s *Server) handleOrderBook(w http.ResponseWriter, r *http.Request) {
-    symbol := r.URL.Query().Get("symbol")
-    if symbol == "" {
-        s.writeErrorPlain(w, http.StatusBadRequest, "symbol is required")
-        return
-    }
-    depthParam := r.URL.Query().Get("depth")
-    depth := 0
-    if depthParam != "" {
-        if v, err := strconv.Atoi(depthParam); err == nil && v >= 0 {
-            depth = v
-        } else {
-            s.writeErrorPlain(w, http.StatusBadRequest, "invalid depth")
-            return
-        }
-    }
-    bids, asks := s.eng.GetOrderBookSnapshot(symbol, depth)
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusOK)
-    _ = json.NewEncoder(w).Encode(map[string]interface{}{
-        "symbol":    symbol,
-        "timestamp": time.Now().UnixNano() / 1_000_000,
-        "bids":      bids,
-        "asks":      asks,
-    })
-}
-
-// handleOrderBookPath supports /api/v1/orderbook/{symbol}
-func (s *Server) handleOrderBookPath(w http.ResponseWriter, r *http.Request) {
+// Unified handler for both /api/v1/orderbook and /api/v1/orderbook/{symbol}
+func (s *Server) handleOrderBookGeneral(w http.ResponseWriter, r *http.Request) {
+    var symbol string
     base := "/api/v1/orderbook/"
-    if !strings.HasPrefix(r.URL.Path, base) {
-        s.writeErrorPlain(w, http.StatusBadRequest, "invalid path")
-        return
+    if strings.HasPrefix(r.URL.Path, base) {
+        symbol = strings.TrimPrefix(r.URL.Path, base)
+        if i := strings.Index(symbol, "/"); i != -1 {
+            symbol = symbol[:i] // Defensive
+        }
+    } else {
+        symbol = r.URL.Query().Get("symbol")
     }
-    symbol := strings.TrimPrefix(r.URL.Path, base)
     if symbol == "" {
         s.writeErrorPlain(w, http.StatusBadRequest, "symbol is required")
         return
     }
-    depthParam := r.URL.Query().Get("depth")
     depth := 0
-    if depthParam != "" {
-        if v, err := strconv.Atoi(depthParam); err == nil && v >= 0 {
-            depth = v
+    if v := r.URL.Query().Get("depth"); v != "" {
+        if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+            depth = n
         } else {
             s.writeErrorPlain(w, http.StatusBadRequest, "invalid depth")
             return

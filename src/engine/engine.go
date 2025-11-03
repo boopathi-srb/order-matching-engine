@@ -5,13 +5,13 @@ import (
 	"sync"
 )
 
-// MatchingEngine is the top-level, thread-safe component.
+// MatchingEngine is the top-level, thread-safe component for all symbols.
 type MatchingEngine struct {
 	Books map[string]*OrderBook
 	Locks map[string]*sync.RWMutex
 	globalMutex sync.RWMutex
 
-	// NEW: Global, thread-safe store for ALL orders
+	// Global, thread-safe store for ALL orders
 	orderStore      map[string]*Order
 	orderStoreMutex sync.RWMutex
 }
@@ -64,7 +64,7 @@ func (me *MatchingEngine) SubmitOrder(order *Order) (ProcessOrderResponse, error
 	if order.Type == Market {
 		totalQty, ok := book.checkMarketOrderLiquidity(order)
 		if !ok {
-			// [cite: 257-260, 278] Reject the order.
+			// Reject the order.
 			// We must also remove it from the global store.
 			me.orderStoreMutex.Lock()
 			delete(me.orderStore, order.ID)
@@ -97,7 +97,7 @@ func (me *MatchingEngine) CancelOrder(orderID string) (*Order, error) {
 		return nil, fmt.Errorf("order not found") // 404
 	}
 
-	// [cite: 359] Check if it's already filled or cancelled
+	// Check if it's already filled or cancelled
 	if order.Status == StatusFilled || order.Status == StatusCancelled {
 		me.orderStoreMutex.Unlock()
 		return nil, fmt.Errorf("cannot cancel order already filled or cancelled") // 400
@@ -149,7 +149,7 @@ func (me *MatchingEngine) GetOrderBookSnapshot(symbol string, depth int) (bids [
 		return
 	}
 
-	// --- Get Asks (Lowest price first [cite: 403]) ---
+	// --- Get Asks (Lowest price first) ---
 	askCount := 0
 	book.asks.Ascend(func(l *PriceLevel) bool {
 		if depth > 0 && askCount >= depth {
@@ -159,7 +159,7 @@ func (me *MatchingEngine) GetOrderBookSnapshot(symbol string, depth int) (bids [
 		for e := l.Orders.Front(); e != nil; e = e.Next() {
 			totalQuantity += e.Value.(*Order).RemainingQuantity()
 		}
-		// [cite: 405] Quantities at each price level are aggregated
+		// Quantities at each price level are aggregated
 		if totalQuantity > 0 {
 			asks = append(asks, AggregatedPriceLevel{Price: l.Price, Quantity: totalQuantity})
 			askCount++
@@ -167,7 +167,7 @@ func (me *MatchingEngine) GetOrderBookSnapshot(symbol string, depth int) (bids [
 		return true
 	})
 
-	// --- Get Bids (Highest price first [cite: 402]) ---
+	// --- Get Bids (Highest price first) ---
 	bidCount := 0
 	book.bids.Ascend(func(l *PriceLevel) bool {
 		if depth > 0 && bidCount >= depth {
@@ -177,7 +177,7 @@ func (me *MatchingEngine) GetOrderBookSnapshot(symbol string, depth int) (bids [
 		for e := l.Orders.Front(); e != nil; e = e.Next() {
 			totalQuantity += e.Value.(*Order).RemainingQuantity()
 		}
-		// [cite: 405] Quantities at each price level are aggregated
+		// Quantities at each price level are aggregated
 		if totalQuantity > 0 {
 			bids = append(bids, AggregatedPriceLevel{Price: l.Price, Quantity: totalQuantity})
 			bidCount++

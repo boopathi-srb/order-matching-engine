@@ -8,7 +8,7 @@ import (
 // Side defines the side of an order (BUY or SELL).
 type Side string
 type OrderType string
-type OrderStatus string // NEW TYPE
+type OrderStatus string
 
 const (
 	Buy  Side = "BUY"
@@ -36,8 +36,8 @@ type Order struct {
 	Type      OrderType   `json:"type"`
 	Price     int64       `json:"price"`     // Stored as integer (cents)
 	Quantity  int64       `json:"quantity"`  // Original quantity
-	FilledQuantity int64       `json:"filled_quantity"` // NEW FIELD
-	Status    OrderStatus `json:"status"`        // NEW FIELD
+	FilledQuantity int64  `json:"filled_quantity"`
+	Status    OrderStatus `json:"status"`
 	Timestamp int64       `json:"timestamp"` // Unix milliseconds
 
 	// Internal field to store its place in the PriceLevel queue.
@@ -62,8 +62,8 @@ type Trade struct {
 // ProcessOrderResponse is the result of processing an order
 type ProcessOrderResponse struct {
 	Trades            []Trade
-	FilledRestingOrders []*Order // NEW: List of resting orders that were fully filled
-	OrderInBook       bool     // True if a limit order was partially filled and remains
+	FilledRestingOrders []*Order
+	OrderInBook       bool
 	IsMarketOrder     bool
 }
 
