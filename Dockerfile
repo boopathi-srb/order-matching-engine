@@ -1,5 +1,6 @@
 # ---- Build Stage ----
-FROM golang:1.21-alpine AS builder
+# Use the Go version required by your go.mod
+FROM golang:1.24.3-alpine AS builder
 WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
