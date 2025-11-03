@@ -57,8 +57,11 @@ See [`postman/Order-Matching-Engine-API.postman_collection.json`](postman/Order-
 ## Running Tests
 
 ```sh
-go test ./src/engine
-go test ./src/api
+# Run tests from the consolidated tests/ directory
+go test -v ./tests
+
+# Alternatively, run all packages' tests (if you add more later)
+go test -v ./...
 ```
 - Tests cover: full match, partial fill, market/limit, cancellation, errors, edge cases
 

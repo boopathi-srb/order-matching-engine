@@ -1,4 +1,4 @@
-package api
+package api_test
 
 import (
     "bytes"
@@ -7,11 +7,12 @@ import (
     "net/http/httptest"
     "testing"
 
+    api "order-matching-engine/src/api"
     "order-matching-engine/src/engine"
 )
 
-func newTestServer() *Server {
-    return NewServer(engine.NewMatchingEngine())
+func newTestServer() *api.Server {
+    return api.NewServer(engine.NewMatchingEngine())
 }
 
 func TestCreateOrder_Accepted(t *testing.T) {
@@ -122,7 +123,7 @@ func TestCreateOrder_InsufficientLiquidity_Market(t *testing.T) {
     }
 }
 
-func doPost(t *testing.T, srv *Server, body []byte, expStatus int) {
+func doPost(t *testing.T, srv *api.Server, body []byte, expStatus int) {
     t.Helper()
     req := httptest.NewRequest(http.MethodPost, "/api/v1/orders", bytes.NewReader(body))
     req.Header.Set("Content-Type", "application/json")
