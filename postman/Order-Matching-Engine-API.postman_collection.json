@@ -1,11 +1,13 @@
 {
   "info": {
     "name": "Order Matching Engine API",
-    "description": "Postman collection for the Order Matching Engine HTTP API (v1). Uses {{baseUrl}} as the server base URL.",
+    "description": "Postman collection for the Order Matching Engine HTTP API (v1). Uses {{protocol}}://{{host}}:{{port}} as the server base URL.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "protocol", "value": "http" },
+    { "key": "host", "value": "localhost" },
+    { "key": "port", "value": "8080" },
     { "key": "symbol", "value": "AAPL" },
     { "key": "depth", "value": "0" },
     { "key": "orderId", "value": "" }
@@ -17,7 +19,11 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/v1/health"
+          "raw": "{{protocol}}://{{host}}:{{port}}/api/v1/health",
+          "protocol": "{{protocol}}",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","v1","health"]
         },
         "description": "Simple health check endpoint."
       },
@@ -51,7 +57,13 @@
               "mode": "raw",
               "raw": "{\n  \"symbol\": \"{{symbol}}\",\n  \"side\": \"BUY\",\n  \"type\": \"LIMIT\",\n  \"price\": 15050,\n  \"quantity\": 100\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/orders" },
+            "url": {
+              "raw": "{{protocol}}://{{host}}:{{port}}/api/v1/orders",
+              "protocol": "{{protocol}}",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["api","v1","orders"]
+            },
             "description": "Create a new order. Fields: id (optional), symbol (required), side [BUY|SELL], type [LIMIT|MARKET], price (LIMIT only, >0), quantity (>0)."
           },
           "response": [
@@ -98,8 +110,74 @@
               "mode": "raw",
               "raw": "{\n  \"symbol\": \"{{symbol}}\",\n  \"side\": \"BUY\",\n  \"type\": \"MARKET\",\n  \"quantity\": 500\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/orders" },
+            "url": {
+              "raw": "{{protocol}}://{{host}}:{{port}}/api/v1/orders",
+              "protocol": "{{protocol}}",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["api","v1","orders"]
+            },
             "description": "Create a market order. Requires sufficient liquidity in the opposite book; otherwise returns 400."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - Insufficient Liquidity",
+              "originalRequest": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/v1/orders" } },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"error\": \"insufficient liquidity: only 0 shares available, requested 500\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order (LIMIT SELL)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"{{symbol}}\",\n  \"side\": \"SELL\",\n  \"type\": \"LIMIT\",\n  \"price\": 15052,\n  \"quantity\": 100\n}"
+            },
+            "url": {
+              "raw": "{{protocol}}://{{host}}:{{port}}/api/v1/orders",
+              "protocol": "{{protocol}}",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["api","v1","orders"]
+            },
+            "description": "Create a new SELL limit order."
+          },
+          "response": [
+            {
+              "name": "201 Created - ACCEPTED (in book)",
+              "originalRequest": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/v1/orders" } },
+              "status": "Created",
+              "code": 201,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"order_id\": \"7c9c1f3a-9c57-4e7e-87c1-2d4e3f1a99aa\",\n  \"status\": \"ACCEPTED\",\n  \"message\": \"Order added to book\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order (MARKET SELL)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"{{symbol}}\",\n  \"side\": \"SELL\",\n  \"type\": \"MARKET\",\n  \"quantity\": 500\n}"
+            },
+            "url": {
+              "raw": "{{protocol}}://{{host}}:{{port}}/api/v1/orders",
+              "protocol": "{{protocol}}",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["api","v1","orders"]
+            },
+            "description": "Create a SELL market order. Requires sufficient opposite-side liquidity."
           },
           "response": [
             {
@@ -117,7 +195,13 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}" },
+            "url": {
+              "raw": "{{protocol}}://{{host}}:{{port}}/api/v1/orders/{{orderId}}",
+              "protocol": "{{protocol}}",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["api","v1","orders","{{orderId}}"]
+            },
             "description": "Fetch an order's current status by its ID."
           },
           "response": [
@@ -144,7 +228,13 @@
           "request": {
             "method": "DELETE",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}" },
+            "url": {
+              "raw": "{{protocol}}://{{host}}:{{port}}/api/v1/orders/{{orderId}}",
+              "protocol": "{{protocol}}",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["api","v1","orders","{{orderId}}"]
+            },
             "description": "Cancel an existing order by ID. Cannot cancel already FILLED or CANCELLED orders."
           },
           "response": [
@@ -184,7 +274,17 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/orderbook?symbol={{symbol}}&depth={{depth}}" },
+            "url": {
+              "raw": "{{protocol}}://{{host}}:{{port}}/api/v1/orderbook?symbol={{symbol}}&depth={{depth}}",
+              "protocol": "{{protocol}}",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["api","v1","orderbook"],
+              "query": [
+                { "key": "symbol", "value": "{{symbol}}" },
+                { "key": "depth", "value": "{{depth}}" }
+              ]
+            },
             "description": "Returns aggregated price levels. depth>=0 (0 means full depth)."
           },
           "response": [
@@ -203,7 +303,16 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/orderbook/{{symbol}}?depth={{depth}}" },
+            "url": {
+              "raw": "{{protocol}}://{{host}}:{{port}}/api/v1/orderbook/{{symbol}}?depth={{depth}}",
+              "protocol": "{{protocol}}",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["api","v1","orderbook","{{symbol}}"],
+              "query": [
+                { "key": "depth", "value": "{{depth}}" }
+              ]
+            },
             "description": "Same as query version, but the symbol is in the path."
           },
           "response": [
