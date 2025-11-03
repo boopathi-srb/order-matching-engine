@@ -1,0 +1,225 @@
+{
+  "info": {
+    "name": "Order Matching Engine API",
+    "description": "Postman collection for the Order Matching Engine HTTP API (v1). Uses {{baseUrl}} as the server base URL.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "symbol", "value": "AAPL" },
+    { "key": "depth", "value": "0" },
+    { "key": "orderId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/health"
+        },
+        "description": "Simple health check endpoint."
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/health" }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [ { "key": "Content-Type", "value": "application/json" } ],
+          "body": "{\n  \"status\": \"healthy\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order (LIMIT BUY)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"{{symbol}}\",\n  \"side\": \"BUY\",\n  \"type\": \"LIMIT\",\n  \"price\": 15050,\n  \"quantity\": 100\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/orders" },
+            "description": "Create a new order. Fields: id (optional), symbol (required), side [BUY|SELL], type [LIMIT|MARKET], price (LIMIT only, >0), quantity (>0)."
+          },
+          "response": [
+            {
+              "name": "201 Created - ACCEPTED (in book)",
+              "originalRequest": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\\n  \\\"symbol\\\": \\\"{{symbol}}\\\",\\n  \\\"side\\\": \\\"BUY\\\",\\n  \\\"type\\\": \\\"LIMIT\\\",\\n  \\\"price\\\": 15050,\\n  \\\"quantity\\\": 100\\n}" }, "url": { "raw": "{{baseUrl}}/api/v1/orders" } },
+              "status": "Created",
+              "code": 201,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"order_id\": \"2e0c1f3a-9c57-4e7e-87c1-2d4e3f1a99f1\",\n  \"status\": \"ACCEPTED\",\n  \"message\": \"Order added to book\"\n}"
+            },
+            {
+              "name": "202 Accepted - PARTIAL_FILL",
+              "originalRequest": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/v1/orders" } },
+              "status": "Accepted",
+              "code": 202,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"order_id\": \"b6f2a4e8-2a7d-4d8a-b9bc-2d2b2a01b5d2\",\n  \"status\": \"PARTIAL_FILL\",\n  \"filled_quantity\": 700,\n  \"remaining_quantity\": 100,\n  \"trades\": [\n    {\n      \"trade_id\": \"t1\",\n      \"aggressor_order_id\": \"b6f2a4e8-2a7d-4d8a-b9bc-2d2b2a01b5d2\",\n      \"resting_order_id\": \"s1\",\n      \"price\": 15050,\n      \"quantity\": 300,\n      \"timestamp\": 1710000000000\n    },\n    {\n      \"trade_id\": \"t2\",\n      \"aggressor_order_id\": \"b6f2a4e8-2a7d-4d8a-b9bc-2d2b2a01b5d2\",\n      \"resting_order_id\": \"s2\",\n      \"price\": 15052,\n      \"quantity\": 400,\n      \"timestamp\": 1710000000100\n    }\n  ]\n}"
+            },
+            {
+              "name": "200 OK - FILLED",
+              "originalRequest": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/v1/orders" } },
+              "status": "OK",
+              "code": 200,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"order_id\": \"a1b2c3d4\",\n  \"status\": \"FILLED\",\n  \"filled_quantity\": 500,\n  \"trades\": [\n    {\n      \"trade_id\": \"t3\",\n      \"aggressor_order_id\": \"a1b2c3d4\",\n      \"resting_order_id\": \"s3\",\n      \"price\": 15050,\n      \"quantity\": 500,\n      \"timestamp\": 1710000000200\n    }\n  ]\n}"
+            },
+            {
+              "name": "400 Bad Request - Validation/Error",
+              "originalRequest": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/v1/orders" } },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"error\": \"Invalid order: symbol is required\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order (MARKET BUY)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"{{symbol}}\",\n  \"side\": \"BUY\",\n  \"type\": \"MARKET\",\n  \"quantity\": 500\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/orders" },
+            "description": "Create a market order. Requires sufficient liquidity in the opposite book; otherwise returns 400."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - Insufficient Liquidity",
+              "originalRequest": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/v1/orders" } },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"error\": \"insufficient liquidity: only 0 shares available, requested 500\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}" },
+            "description": "Fetch an order's current status by its ID."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}" } },
+              "status": "OK",
+              "code": 200,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"order_id\": \"{{orderId}}\",\n  \"symbol\": \"{{symbol}}\",\n  \"side\": \"BUY\",\n  \"type\": \"LIMIT\",\n  \"price\": 15050,\n  \"quantity\": 100,\n  \"filled_quantity\": 0,\n  \"status\": \"ACCEPTED\",\n  \"timestamp\": 1710000000300\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}" } },
+              "status": "Not Found",
+              "code": 404,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"error\": \"Order not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}" },
+            "description": "Cancel an existing order by ID. Cannot cancel already FILLED or CANCELLED orders."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}" } },
+              "status": "OK",
+              "code": 200,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"order_id\": \"{{orderId}}\",\n  \"status\": \"CANCELLED\"\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}" } },
+              "status": "Not Found",
+              "code": 404,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"error\": \"Order not found\"\n}"
+            },
+            {
+              "name": "400 Bad Request - Already filled/cancelled",
+              "originalRequest": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}" } },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"error\": \"Cannot cancel: order already filled\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Order Book",
+      "item": [
+        {
+          "name": "Get Order Book (query params)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/orderbook?symbol={{symbol}}&depth={{depth}}" },
+            "description": "Returns aggregated price levels. depth>=0 (0 means full depth)."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/orderbook?symbol={{symbol}}&depth={{depth}}" } },
+              "status": "OK",
+              "code": 200,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"symbol\": \"{{symbol}}\",\n  \"timestamp\": 1710000000400,\n  \"bids\": [ { \"price\": 15050, \"quantity\": 400 } ],\n  \"asks\": [ { \"price\": 15052, \"quantity\": 700 } ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Order Book (path symbol)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/orderbook/{{symbol}}?depth={{depth}}" },
+            "description": "Same as query version, but the symbol is in the path."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/orderbook/{{symbol}}?depth={{depth}}" } },
+              "status": "OK",
+              "code": 200,
+              "header": [ { "key": "Content-Type", "value": "application/json" } ],
+              "body": "{\n  \"symbol\": \"{{symbol}}\",\n  \"timestamp\": 1710000000400,\n  \"bids\": [ { \"price\": 15050, \"quantity\": 400 } ],\n  \"asks\": [ { \"price\": 15052, \"quantity\": 700 } ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+
