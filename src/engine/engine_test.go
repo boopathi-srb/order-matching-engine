@@ -1,11 +1,9 @@
 package engine
 
 import (
-	"testing"
-	"time"
+    "testing"
 
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/assert"
 )
 
 // setup a new engine for each test
@@ -103,10 +101,10 @@ func TestExample2_MultiplePriceLevels(t *testing.T) {
 
 	// 4. Check Final Order Book State [cite: 187-188]
 	// order-003 and order-004 should be filled
-	_, err = eng.GetOrderStatus("order-003")
-	assert.Error(t, err, "Order-003 should be filled and not in active book")
-	_, err = eng.GetOrderStatus("order-004")
-	assert.Error(t, err, "Order-004 should be filled and not in active book")
+    _, err = eng.GetOrderStatus("order-003")
+    assert.Error(err, "Order-003 should be filled and not in active book")
+    _, err = eng.GetOrderStatus("order-004")
+    assert.Error(err, "Order-004 should be filled and not in active book")
 	
 	// order-005 (sell) and order-006 (buy) should be untouched
 	status5, _ := eng.GetOrderStatus("order-005")
@@ -159,8 +157,8 @@ func TestExample3_TimePriorityFIFO(t *testing.T) {
 	assert.Equal(int64(400), status9.RemainingQuantity())
 	assert.Equal(StatusAccepted, status9.Status)
 
-	_, err = eng.GetOrderStatus("order-007")
-	assert.Error(t, err, "Order-007 should be filled")
+    _, err = eng.GetOrderStatus("order-007")
+    assert.Error(err, "Order-007 should be filled")
 }
 
 // TestExample4_MarketOrderExecution tests a market order walking the book [cite: 215-242]
@@ -228,8 +226,8 @@ func TestExample5_InsufficientLiquidity(t *testing.T) {
 	resp, err := eng.SubmitOrder(newBuyOrder)
 
 	// 3. Check Result [cite: 257-261]
-	assert.Error(t, err, "Should have returned an error")
-	assert.Contains(t, err.Error(), "insufficient liquidity", "Error message should be correct")
+    assert.Error(err, "Should have returned an error")
+    assert.Contains(err.Error(), "insufficient liquidity", "Error message should be correct")
 	assert.Equal(0, len(resp.Trades), "No trades should be executed")
 	
 	// 4. Check Final Order Book State
@@ -248,8 +246,7 @@ func TestCancelOrder(t *testing.T) {
 	// 1. Add an order
 	order := newTestOrder("order-tocancel", "AAPL", Buy, Limit, 10000, 100, 1000)
 	_, err := eng.SubmitOrder(order)
-	assert.NoError(err)
-	assert.True(t, err == nil)
+    assert.NoError(err)
 
 	// 2. Check that it's in the book
 	status, err := eng.GetOrderStatus("order-tocancel")
@@ -272,13 +269,13 @@ func TestCancelOrder(t *testing.T) {
 	assert.Equal(StatusCancelled, status.Status)
 	
 	// 6. Test cancelling a non-existent order [cite: 476]
-	_, err = eng.CancelOrder("order-does-not-exist")
-	assert.Error(t, err)
+    _, err = eng.CancelOrder("order-does-not-exist")
+    assert.Error(err)
 	assert.Equal("order not found", err.Error())
 
 	// 7. Test cancelling a filled order [cite: 359]
 	_, _ = eng.SubmitOrder(newTestOrder("sell-order", "AAPL", Sell, Limit, 10000, 100, 1001))
-	_, err = eng.CancelOrder("order-tocancel") // "order-tocancel" is now filled
-	assert.Error(t, err)
+    _, err = eng.CancelOrder("order-tocancel") // "order-tocancel" is now filled
+    assert.Error(err)
 	assert.Equal("cannot cancel order already filled or cancelled", err.Error())
 }

@@ -35,8 +35,16 @@ func (s *Server) registerRoutes() {
     s.mux.HandleFunc("/orders", s.handleOrders)
     s.mux.HandleFunc("/orders/", s.handleOrderByID)
     s.mux.HandleFunc("/orderbook", s.handleOrderBook)
+    // API v1 aliases
+    s.mux.HandleFunc("/api/v1/orders", s.handleOrders)
+    s.mux.HandleFunc("/api/v1/orders/", s.handleOrderByID)
+    s.mux.HandleFunc("/api/v1/orderbook", s.handleOrderBook)
     // simple health check
     s.mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+        w.WriteHeader(http.StatusOK)
+        _, _ = w.Write([]byte("ok"))
+    })
+    s.mux.HandleFunc("/api/v1/healthz", func(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(http.StatusOK)
         _, _ = w.Write([]byte("ok"))
     })
