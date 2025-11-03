@@ -74,7 +74,7 @@ func (me *MatchingEngine) SubmitOrder(order *Order) (ProcessOrderResponse, error
 	}
 
 	response := book.ProcessOrder(order)
-	
+
     // Remove fully filled resting orders from the global store
     if len(response.FilledRestingOrders) > 0 {
         me.orderStoreMutex.Lock()
@@ -102,7 +102,7 @@ func (me *MatchingEngine) CancelOrder(orderID string) (*Order, error) {
 		me.orderStoreMutex.Unlock()
 		return nil, fmt.Errorf("cannot cancel order already filled or cancelled") // 400
 	}
-	
+
 	// Mark as cancelled
 	order.Status = StatusCancelled
 	me.orderStoreMutex.Unlock()
