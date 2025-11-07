@@ -75,15 +75,6 @@ func (me *MatchingEngine) SubmitOrder(order *Order) (ProcessOrderResponse, error
 
 	response := book.ProcessOrder(order)
 
-    // Remove fully filled resting orders from the global store
-    if len(response.FilledRestingOrders) > 0 {
-        me.orderStoreMutex.Lock()
-        for _, filledOrder := range response.FilledRestingOrders {
-            delete(me.orderStore, filledOrder.ID)
-        }
-        me.orderStoreMutex.Unlock()
-    }
-
 	return response, nil
 }
 
