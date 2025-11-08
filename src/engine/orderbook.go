@@ -65,8 +65,8 @@ type OrderBook struct {
 // NewOrderBook creates and initializes a new OrderBook.
 func NewOrderBook() *OrderBook {
 	return &OrderBook{
-		bids:        btree.NewG[*PriceLevel](2, BidsSort),
-		asks:        btree.NewG[*PriceLevel](2, AsksSort),
+		bids:        btree.NewG(2, BidsSort),
+		asks:        btree.NewG(2, AsksSort),
 		bidPriceMap: make(map[int64]*PriceLevel),
 		askPriceMap: make(map[int64]*PriceLevel),
 		orderMap:    make(map[string]*list.Element),
