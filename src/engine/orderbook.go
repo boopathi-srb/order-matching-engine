@@ -105,8 +105,8 @@ func (ob *OrderBook) checkMarketOrderLiquidity(order *Order) (int64, bool) {
 
 // ProcessOrder processes a new order, attempting to match it.
 func (ob *OrderBook) ProcessOrder(order *Order) ProcessOrderResponse {
-	trades := []Trade{}
-	filledRestingOrders := []*Order{}
+	var trades []Trade
+	var filledRestingOrders []*Order
 
 	if order.Side == Buy {
 		trades, filledRestingOrders = ob.matchBuyOrder(order)
